@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/slack-go/slack"
+	"github.com/joho/godotenv"
 )
 
 const CHANNEL = "C021WGW2LSF"
@@ -19,14 +20,19 @@ type EventPayload struct {
 	Challenge string `json:"challenge"`
 	Event     struct {
 		Type    string `json:"type"`
-		Channel string `json:"channel_id"`
-		File    struct {
+		Channel string `json:"channel"`
+		Files   []struct {
 			ID string `json:"id"`
-		} `json:"file"`
+		} `json:"files"`
 	} `json:"event"`
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	r := gin.Default()
 
 	r.POST("/slack/events", func(c *gin.Context) {
@@ -46,7 +52,7 @@ func main() {
 
 		client := slack.New(os.Getenv("SLACK_TOKEN"))
 
-		f, _, _, err := client.GetFileInfo(payload.Event.File.ID, 100, 1)
+		f, _, _, err := client.GetFileInfo(payload.Event.Files[0].ID, 100, 1)
 		if err != nil {
 			log.Println(err)
 			return
@@ -100,5 +106,5 @@ func main() {
 		client.PostMessage(CHANNEL, slack.MsgOptionText(image, false), slack.MsgOptionTS(share.Ts))
 	})
 
-	r.Run("0.0.0.0:3000")
+	r.Run(os.Getenv("HOST"))
 }
