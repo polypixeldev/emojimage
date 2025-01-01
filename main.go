@@ -29,6 +29,10 @@ type EventPayload struct {
 func main() {
 	r := gin.Default()
 
+	r.GET("/status", func(c *gin.Context) {
+		c.String(200, "")
+	})
+
 	r.POST("/slack/events", func(c *gin.Context) {
 		var payload EventPayload
 		c.BindJSON(&payload)
